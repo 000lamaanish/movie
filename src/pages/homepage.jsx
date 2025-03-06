@@ -1,61 +1,74 @@
-import React from 'react'
-import Moviecard from '../component/moviecard';
-import { useState, useEffect } from 'react';
-import "../css/Home.css"
-import { searchMovies, Getpopularmovie } from '../component/api';
-// import Fetchapi from "../component/fetchapi"
+import React, { useState, useEffect } from "react";
+import Moviecard from "../component/moviecard";
+import "../css/Home.css";
+import { searchMovies, Getpopularmovie } from "../component/api";
+import Navbar from "../component/navbar";
+
 
 const Homepage = () => {
-
     const [search, setSearch] = useState("");
-
     const [movies, setMovies] = useState([]);
-    // const movies = getpopularmovie()
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const Loadpopularmovies = async () => {
+        const LoadPopularMovies = async () => {
             try {
-                const popularmovies = await Getpopularmovie()
-                setMovies(popularmovies)
+                const popularMovies = await Getpopularmovie();
+                setMovies(popularMovies);
             } catch (err) {
-                console.log(err)
-                setError("Failed ro load movies...")
+                console.log(err);
+                setError("Failed to load movies...");
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
-        }
+        };
 
-        Loadpopularmovies()
+        LoadPopularMovies();
     }, []);
 
+    const handleSearch = async (e) => {
+        e.preventDefault();
+        if (!search.trim()) return;
 
-    const handleSearch = (e) => {
-        alert(search)
+        try {
+            setLoading(true);
+            setError(null);
+            const results = await searchMovies(search);
+            setMovies(results);
+        } catch (err) {
+            setError("Failed to fetch search results...");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div>
-            <form onSubmit={handleSearch} className='search-form'>
-                <input type="text" placeholder='search the movie' className='search'
+            <Navbar />
+            <form onSubmit={handleSearch} className="search-form">
+                <input
+                    type="text"
+                    placeholder="Search for a movie..."
+                    className="search"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
-                <button type='submit' className='search-button'>search</button>
+                <button type="submit" className="search-button">Search</button>
             </form>
-            <div className='movies-grid'>
 
+            {loading && <p className="loading">Loading movies...</p>}
+            {error && <p className="error">{error}</p>}
+
+            <div className="movies-grid">
+                {movies.length > 0 ? (
+                    movies.map((movie) => <Moviecard key={movie.id} movie={movie} />)
+                ) : (
+                    !loading && <p>No movies found.</p>
+                )}
             </div>
-            {Array.isArray(movies) && movies.length > 0 ? (
-                movies.map((movie) => <Moviecard key={movie.id} movie={movie} />)
-            ) : (
-                <p>No movies available.</p>
-            )}
-
         </div>
+    );
+};
 
-    )
-}
-
-export default Homepage
+export default Homepage;
